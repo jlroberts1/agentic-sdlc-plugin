@@ -16,11 +16,44 @@ the seven phases, install, and model routing on one page.
 
 ## Install (from the marketplace)
 
+This is the **deploygate fork** (`jlroberts1/agentic-sdlc-plugin`); its marketplace is
+`agentic-sdlc-deploygate`. The upstream plugin lives at `orchestratedbyalex/agentic-sdlc-plugin`.
+
 ```text
 # inside Claude Code:
-/plugin marketplace add orchestratedbyalex/agentic-sdlc-plugin
-/plugin install agentic-sdlc@agentic-sdlc-marketplace
+/plugin marketplace add jlroberts1/agentic-sdlc-plugin
+/plugin install agentic-sdlc@agentic-sdlc-deploygate
 /agentic-sdlc:sdlc
+```
+
+Or from a shell:
+
+```bash
+claude plugin marketplace add jlroberts1/agentic-sdlc-plugin
+claude plugin install agentic-sdlc@agentic-sdlc-deploygate
+```
+
+The install is user-scoped by default, so one install covers every repository on the
+machine. Confirm with `/plugin` (it lists the installed version), then `/reload-plugins`.
+
+**Updates:** Claude Code delivers a new version only when `version` in
+`.claude-plugin/plugin.json` changes on `main` — a push alone is not enough. Third-party
+marketplaces don't auto-update by default: turn it on for `agentic-sdlc-deploygate` in
+`/plugin` → Marketplaces, or run `/plugin marketplace update agentic-sdlc-deploygate`.
+
+**Sharing with a repository's collaborators:** commit this to the repo's
+`.claude/settings.json`. It enables the plugin but doesn't download it, so each collaborator
+still runs the install once (`claude plugin install agentic-sdlc@agentic-sdlc-deploygate --scope project`):
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "agentic-sdlc-deploygate": {
+      "source": { "source": "github", "repo": "jlroberts1/agentic-sdlc-plugin" }
+    }
+  },
+  "enabledPlugins": { "agentic-sdlc@agentic-sdlc-deploygate": true }
+}
 ```
 
 ## Install (local development)
