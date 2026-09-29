@@ -77,12 +77,16 @@ holds (otherwise skip it). Run the validation gate after each group.
 **Model routing:** before the FIRST dispatch of the run, read
 `${CLAUDE_PLUGIN_ROOT}/references/model-routing.md` and apply its tier table (agent →
 tier, tier × `modelProfile` → the Task tool's `model` parameter) on every dispatch. No
-profile ever downgrades the full tier — gates and code authors stay on the session model.
+profile ever downgrades the full tier — every reviewer and gate stays on the session model;
+only the author tier (code/test writing, always gated by a full-tier reviewer) may move.
 
 **Gate parsing:** every gate agent ends its report with one machine-parsable
 `VERDICT: PASS|FAIL` line (the phase's own verdict name — APPROVED, READY FOR RELEASE,
 PUBLISH GATE — stays alongside): key the pass/fail decision off that line, not the
-surrounding prose. If a gate report lacks a parseable `VERDICT:` line, re-dispatch that
+surrounding prose. A line is parseable when it starts with `VERDICT: PASS` or
+`VERDICT: FAIL`, optionally wrapped in markdown bold (`**VERDICT: FAIL — …**` counts; a
+verdict buried mid-sentence or only in a heading does not); if several appear, the last
+one wins. If a gate report lacks a parseable `VERDICT:` line, re-dispatch that
 gate agent once with the defect named; a second miss is a gate FAIL. Record every gate
 verdict deterministically the moment you parse it:
 

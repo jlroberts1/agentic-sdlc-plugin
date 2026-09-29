@@ -21,6 +21,16 @@ INPUTS:
 - Static & Dynamic Analysis Report (Agent 3)
 - Regression Test Report (Agent 4)
 
+CHANGE SCOPE: the orchestrator passes a `CHANGE_SCOPE` block (base tag, changed files,
+in-scope PLAN ids with their `addresses_fr` / `addresses_us`). Unless it says `full`,
+STEPs 1–2 and gate conditions e, f, g, h cover the in-scope set only: user stories named
+by an in-scope plan's `addresses_us` or implementing an in-scope FR, NFRs cited by an
+in-scope plan or FR, **every security NFR** (security is checked at every tier, never
+scoped out), ADRs constraining the changed files, and the in-scope plans. Everything
+outside was validated by the Verify that released it. STEP 0's independent re-run is
+never scoped — it runs the whole suite. State in the Executive Summary:
+`Scope: CHANGE (base <tag>)` or `Scope: FULL`.
+
 STEP 0 — DISCOVER COUNTS + INDEPENDENT RE-RUN
 
 Use counts from the Verification reports for inventory (FRs, NFRs, user stories). Do
@@ -32,7 +42,8 @@ block cannot PASS its gate condition.
 Then independently re-run the test suite ONCE yourself: read the test command from
 CLAUDE.md, run it via Bash, and record the exact command, exit code, and the runner's
 verbatim summary lines in your own Execution Evidence section. Cross-check your totals
-against the Regression Tester's Run 1 / Run 2: a mismatch in suites collected or
+against the Regression Tester's Run 1 (its full run; Run 2 may be scoped to the changed
+tests): a mismatch in suites collected or
 pass/fail totals that the Regression Tester did not already flag as flaky is an
 EVIDENCE DISCREPANCY — gate condition d2 fails. You remain read-only: re-running the
 suite is fine; fixing anything is not.
@@ -114,7 +125,7 @@ re-type or paraphrase them. Summary lines only, never the full log.
   ```
   <copied lines>
   ```
-- Consistent with Regression Tester Run 1 / Run 2: YES / NO — <detail>
+- Consistent with Regression Tester Run 1 (full run): YES / NO — <detail>
 
 ## Gate Conditions
 | # | Condition | Status | Details |

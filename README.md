@@ -66,13 +66,15 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" config --model-profile <qual
 
 - **quality** — every agent runs on the session model. Most thorough, most expensive.
 - **balanced** (default) — mechanical agents (build/lint analysis, the regression run, the
-  dependency/telemetry monitors) drop to a small fast model and analysis/authoring agents to a
-  mid model. Cheaper and faster, same gates.
-- **economy** — pushes the non-critical tiers to the smallest models for the lowest cost.
+  dependency/telemetry monitors) drop to a small fast model, analysis/doc agents to a mid
+  model, and the code/test authors run on Sonnet. Cheaper and faster, same gates.
+- **economy** — pushes the analysis and mechanical tiers to the smallest model; the code/test
+  authors stay on Sonnet.
 
 Whatever the profile, the **full tier always inherits the session model** — every reviewer and
-validator, the planner, the clarifier, the code/test/implementer authors, and the feedback-loop.
-Model routing never downgrades a gate.
+validator, the planner, the clarifier, and the feedback-loop. The code/test/implementer authors
+are a separate **author** tier: whatever they write is judged by a full-tier reviewer on the
+session model. Model routing never downgrades a gate.
 
 ## The seven phases
 

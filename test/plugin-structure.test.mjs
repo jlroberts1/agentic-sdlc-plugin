@@ -217,7 +217,7 @@ test('sentinel line templates are pinned at their sources', () => {
 test('the model-routing table assigns all 35 agents to exactly one tier', () => {
   const text = readFileSync(join(ROOT, 'references', 'model-routing.md'), 'utf8')
   const assigned = []
-  for (const tier of ['full', 'standard', 'fast']) {
+  for (const tier of ['full', 'author', 'standard', 'fast']) {
     const row = text.split('\n').find(l => l.startsWith(`| **${tier}**`))
     assert.ok(row, `no ${tier} tier row in the model-routing table`)
     const agentsCell = row.split('|')[2] ?? ''
@@ -231,6 +231,71 @@ test('the model-routing table assigns all 35 agents to exactly one tier', () => 
     .filter(f => f.endsWith('.md')).map(f => f.replace(/\.md$/, ''))
   assert.deepEqual(assigned.sort(), roster.sort(),
     'routing table does not cover the agent roster exactly')
+})
+
+// Invariant 9: only code/test writing may leave the session model. Every reviewer/validator
+// plus the planner, clarifier and feedback-loop must sit in the full (always-inherit) tier,
+// and the author tier must stay inherit under the quality profile.
+test('model routing never moves a gate out of the full tier (invariant 9)', () => {
+  const text = readFileSync(join(ROOT, 'references', 'model-routing.md'), 'utf8')
+  const row = tier => text.split('\n').find(l => l.startsWith(`| **${tier}**`)) ?? ''
+  const names = r => [...(r.split('|')[2] ?? '').matchAll(/`([a-z0-9-]+)`/g)].map(m => m[1])
+  const full = names(row('full'))
+  const gates = readdirSync(join(ROOT, 'agents'))
+    .map(f => f.replace(/^sdlc-/, '').replace(/\.md$/, ''))
+    .filter(n => /reviewer|architect-planner|architect-clarifier|feedback-loop/.test(n))
+  for (const g of gates) assert.ok(full.includes(g), `${g} is not in the full tier`)
+  assert.deepEqual(names(row('author')).sort(),
+    ['develop-code-author', 'develop-implementer', 'develop-test-author'],
+    'the author tier may hold only the code/test-writing agents')
+  const [quality] = row('author').split('|').slice(3).map(c => c.trim())
+  assert.equal(quality, 'inherit', 'the quality profile must keep authors on the session model')
+})
+
+// Verify is diff-scoped: the orchestrator computes one CHANGE_SCOPE per run and the
+// requirement-tracing agents honour it, while the suite run and security NFRs never scope out.
+test('Verify passes a CHANGE_SCOPE that the tracing agents honour', () => {
+  const verify = readFileSync(join(ROOT, 'phases', 'phase-5-verify.md'), 'utf8')
+  assert.match(verify, /CHANGE_SCOPE/, 'phase 5 never establishes a CHANGE_SCOPE')
+  assert.match(verify, /git describe --tags --abbrev=0/, 'phase 5 CHANGE_SCOPE has no base')
+  assert.match(verify, /CHANGE_SCOPE: full/, 'phase 5 has no full-scope fallback')
+  for (const a of ['coverage-analyst', 'independent-code-reviewer', 'validation-reviewer']) {
+    const text = readFileSync(join(ROOT, 'agents', `sdlc-verify-${a}.md`), 'utf8')
+    assert.match(text, /CHANGE_SCOPE/, `${a} ignores the CHANGE_SCOPE block`)
+  }
+  const validation = readFileSync(join(ROOT, 'agents', 'sdlc-verify-validation-reviewer.md'), 'utf8')
+  assert.match(validation, /every security NFR/, 'validation-reviewer may scope out security NFRs')
+})
+
+// Test-run budget: authors run targeted tests, the Develop reviewer's full run is the
+// regression gate, the coverage analyst never runs the suite, and the regression tester's
+// flake re-run is scoped unless complex. The d2 independent re-run is never removed.
+test('suite runs are budgeted without dropping a gate run (invariant 3)', () => {
+  const read = a => readFileSync(join(ROOT, 'agents', `sdlc-${a}.md`), 'utf8')
+  for (const a of ['develop-code-author', 'develop-test-author', 'develop-implementer'])
+    assert.match(read(a), /Do not\s+run\s+the\s+full\s+suite/i, `${a} still runs the full suite`)
+  const reviewer = read('develop-code-reviewer')
+  assert.match(reviewer, /FULL TEST SUITE RUN/, 'develop code reviewer lost its full run')
+  assert.match(reviewer, /APPROVED_AT/, 'develop code reviewer has no docs-only reuse rule')
+  assert.match(read('verify-coverage-analyst'), /Do NOT run the test suite/, 'coverage analyst still runs the suite')
+  const reg = read('verify-regression-tester')
+  assert.match(reg, /STEP 1 — FIRST FULL RUN/, 'regression tester lost its full run')
+  assert.match(reg, /tier: complex/, 'regression tester never runs a full flake pass for complex changes')
+  assert.match(read('verify-validation-reviewer'), /independently re-run the test suite ONCE/,
+    'validation reviewer lost the d2 independent re-run')
+  assert.match(readFileSync(join(ROOT, 'phases', 'phase-4-develop.md'), 'utf8'), /APPROVED_AT/,
+    'phase 4 never passes APPROVED_AT to the new-requirements review')
+})
+
+// The orchestrator's gate-parsing rule must accept the same lines the eval harness does
+// (evals/lib.mjs VERDICT_RE: line-anchored, optional ** bold, last occurrence wins) — a
+// bolded verdict must never cost a re-dispatch or turn into a second-miss FAIL.
+test('the orchestrator accepts a bold-wrapped VERDICT line, like the eval harness', () => {
+  const sdlc = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
+  assert.match(sdlc, /optionally wrapped in markdown bold/, 'sdlc.md does not say a bolded VERDICT line is parseable')
+  assert.match(sdlc, /last\s+one wins/, 'sdlc.md does not say which VERDICT line wins')
+  const lib = readFileSync(join(ROOT, 'evals', 'lib.mjs'), 'utf8')
+  assert.match(lib, /\(\?:\\\*\\\*\)\?VERDICT/, 'eval harness VERDICT_RE no longer accepts optional bold')
 })
 
 test('the model profile is surfaced at start and offered once at first setup', () => {

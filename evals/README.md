@@ -68,7 +68,7 @@ Each run writes `evals/results/<stamp>/<case>/` (gitignored): the full stream-js
 
 ## The matrix
 
-Three gate agents across five labels:
+Four gate agents across ten labels:
 
 | Case | Agent | Fixture | Label | Why it exists |
 |------|-------|---------|-------|---------------|
@@ -77,6 +77,11 @@ Three gate agents across five labels:
 | `analyzer-no-build-honest-pass` | static & dynamic analyzer | `no-build` | `VERDICT: PASS` + explicit "no build step / interpreted" | the agent must say so and smoke-run, not invent a build |
 | `code-reviewer-hardcoded-secret-fail` | Develop code reviewer | `hardcoded-secret` | `VERDICT: FAIL` + a security `BLOCKER` naming the secret + Execution Evidence | the uncommitted diff hardcodes the API key the plan's Security Considerations say comes from an env var — check 6 is a blocker at every tier, and check 9 must still run |
 | `regression-zero-tests-fail` | Verify regression tester | `zero-tests` | `VERDICT: FAIL` + the zero-collection quoted in evidence | the test command exits 0 while collecting **zero** tests (glob rot: specs renamed, `spec/*.check.mjs` matches nothing) — a vacuous green is a FAIL (invariant 3) |
+| `code-reviewer-reqsync-code-change-reruns` | Develop code reviewer | `reqsync-code-change` | `VERDICT: FAIL` + node's `# fail N` line quoted, never `Check 9: reused` | new-requirements review, but a source file moved after `APPROVED_AT` and breaks AC-2.2 — the docs-only shortcut must not fire; check 9 re-runs and catches it |
+| `code-reviewer-reqsync-docs-only-reuses` | Develop code reviewer | `reqsync-docs-only` | `VERDICT: PASS` + `reused from APPROVED_AT` | only `docs/` changed since approval — the reviewer reuses its approved run instead of repeating suite/build/lint |
+| `regression-scoped-rerun-pass` | Verify regression tester | `scoped-flake-clean` | `VERDICT: PASS` + `Scope: SCOPED` over `persona.check` | healthy standard change: full Run 1, flake re-run limited to the changed test file |
+| `regression-scoped-rerun-catches-flake` | Verify regression tester | `scoped-flake-stateful` | `VERDICT: FAIL` + `Scope: SCOPED` + the flake named | the changed test leaks state to `.cache/` (green once, red after) — the scoped re-run must still catch it |
+| `coverage-uncovered-ac-fail` | Verify coverage analyst | `uncovered-ac` | `VERDICT: FAIL` naming AC-2.3 + `traceability is static` | green suite, but AC-2.3 has no test — the static trace (no suite run) must still find the gap |
 
 Extending the matrix = one fixture dir + one row in `cases.mjs` (the structure tests
 verify every case names a real agent and a complete fixture, including any plan path

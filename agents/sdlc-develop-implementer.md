@@ -75,9 +75,12 @@ randomness). NEVER weaken or delete an existing assertion.
 
 STEP 5 — BUILD, FULL SUITE, LINT
 
-Run the build command from CLAUDE.md — it must exit 0. Then run the FULL test suite.
-Because you authored the code and the tests together, the suite MUST end green — there is
-no expected-red state for this tier. A previously-passing test that now fails is a
+Run the build command from CLAUDE.md — it must exit 0. Then run the tests you wrote plus
+the AFFECTED existing tests (the test files that import the source files you changed),
+passing those files to the test command the way CLAUDE.md shows. Do NOT run the full
+suite — the Code Reviewer runs it next as the gate; if the runner cannot target files, run
+the full suite once instead. Because you authored the code and the tests together, they
+MUST end green — there is no expected-red state for this tier. A previously-passing test that now fails is a
 regression: fix your code, never the test. Run lint and resolve issues in code you touched.
 
 STEP 6 — REPORT
@@ -92,7 +95,7 @@ STEP 6 — REPORT
 
 ### Build, Tests & Lint
 - Build: <command> — PASS/FAIL
-- Full suite: <command> — total/passed/failed (must be green)
+- Targeted tests: <exact command, files> — total/passed/failed (must be green)
 - Lint: clean / issues fixed
 
 ### ADR Compliance

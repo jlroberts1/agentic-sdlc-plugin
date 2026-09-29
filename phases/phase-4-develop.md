@@ -54,7 +54,8 @@ Dispatch (steps marked ⊘ are skipped for 🟢 trivial):
      plan for ALL remaining agents this run (authors, reviewer, reqs-sync) and re-record it
      (`plan-active --id PLAN-MMM`).
 3. **Code Reviewer (sequential):** pass the **TIER**. Always establishes the real diff
-   (`git diff`), confirms the plan's ACs are implemented + tested, runs the test suite + lint,
+   (`git diff`), confirms the plan's ACs are implemented + tested, runs the FULL test suite +
+   build + lint (the authors ran only targeted tests — this is the regression gate),
    and applies the SECURITY check; an unresolved SECURITY blocker can never reach APPROVED.
    Its report quotes **verbatim execution evidence** for every command it ran (exact command,
    exit code, the runner's own summary lines) — counts without evidence are claims.
@@ -74,7 +75,11 @@ Dispatch (steps marked ⊘ are skipped for 🟢 trivial):
 5. **New-requirements review (sequential, lightweight):** ⊘ skipped for 🟢 trivial (no new
    requirements). Otherwise re-dispatch **sdlc-develop-code-reviewer** over ONLY the new/promoted
    FR/US + traceability rows (reviewer ≠ author still holds) to confirm their acceptance criteria
-   match the shipped behavior before completion.
+   match the shipped behavior before completion. Pass `REVIEW: new-requirements` and
+   `APPROVED_AT: <HEAD at step 3's APPROVED verdict>` (record it with `git rev-parse HEAD`
+   when step 3 passes): Requirements Sync only writes under `docs/`, so the reviewer reuses
+   step 3's suite/build/lint run instead of repeating it — and re-runs them if anything
+   outside `docs/` changed.
 
 **On completion:** **commit** the change (`git add` the touched files, then `git commit` with
 a message that names the PLAN-NNN) — do NOT push to a deploy branch (deploys stay

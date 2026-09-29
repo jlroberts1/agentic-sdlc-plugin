@@ -99,7 +99,11 @@ Test authoring rules:
 
 STEP 4 — RUN TESTS
 
-Run the test command from CLAUDE.md. Because you author from the spec in PARALLEL
+Run ONLY the test files you created or modified — pass them to the test command the way
+CLAUDE.md shows (e.g. `npm test -- <files>`, `node --test <files>`, `pytest <files>`).
+Do not run the full suite: the Code Reviewer runs it as the gate, and the Code Author may
+be running tests in the same tree right now. If the runner cannot target files, run the
+full suite. Because you author from the spec in PARALLEL
 with the Code Author, tests for the new behaviour MAY legitimately fail until that
 code lands — that is expected, not a defect. Classify every failure:
   (a) EXPECTED-RED — asserts new behaviour not yet implemented → list under
@@ -107,7 +111,7 @@ code lands — that is expected, not a defect. Classify every failure:
   (b) TEST DEFECT — wrong setup/assertion on your side → fix it.
   (c) REGRESSION — a previously-passing test for EXISTING behaviour now fails →
       flag to Code Author; do NOT edit the source.
-Pre-existing tests MUST stay green. NEVER weaken or delete an assertion to turn a
+Pre-existing tests you did not touch are the Code Reviewer's full run to judge. NEVER weaken or delete an assertion to turn a
 red test green.
 
 STEP 5 — REPORT

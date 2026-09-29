@@ -96,6 +96,14 @@ REVIEW CHECKLIST:
    - Confirm every test cites an AC id.
 
 9. FULL TEST SUITE RUN + RELEASE BUILD + STATIC ANALYSIS
+   NEW-REQUIREMENTS REVIEW EXCEPTION: when the orchestrator dispatches you for the
+   post-Requirements-Sync review (it passes `REVIEW: new-requirements` and the commit or
+   stash of your prior APPROVED review as `APPROVED_AT`), first run
+   `git diff --name-only <APPROVED_AT>` plus `git status --porcelain`. If EVERY changed
+   path is under `docs/`, the code has not moved since your approved run: do NOT re-run
+   the suite, build or lint — state `Check 9: reused from APPROVED_AT <ref> (docs-only
+   diff)` and list the changed paths as your evidence. If any non-`docs/` path changed,
+   run check 9 in full as below.
    Run the test command from CLAUDE.md. ALL tests must pass AND the runner must
    actually have executed them: treat ANY of these as a FAIL even with zero failing
    assertions — a non-zero exit from the test command, a "failed to run" /

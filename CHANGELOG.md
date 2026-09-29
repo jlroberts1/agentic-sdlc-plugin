@@ -10,6 +10,42 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.1-deploygate.4] — 2026-09-29
+
+### Fixed
+- **Bold-wrapped gate verdicts are parseable.** The orchestrator's gate-parsing rule now
+  says a line starting with `VERDICT: PASS|FAIL`, optionally wrapped in markdown bold,
+  counts (last one wins) — matching the eval harness. Previously a strict reading could
+  re-dispatch a gate that bolded its verdict (seen from Haiku on the regression tester)
+  and turn a second bolded reply into a FAIL.
+
+## [0.4.1-deploygate.3] — 2026-09-29
+
+### Changed
+- **Fewer full test-suite runs per change (~8 → 3 on the happy path).** The code author,
+  test author and implementer run only the tests their change touches; the Develop code
+  reviewer's full run is the regression gate. The post-Requirements-Sync review reuses the
+  approved run when only `docs/` changed (`APPROVED_AT`). The Verify coverage analyst traces
+  ACs statically and no longer runs the suite. The regression tester's flake re-run covers
+  only the changed tests for trivial/standard changes (full for complex or unscoped). Kept:
+  the Develop reviewer's full run, the regression tester's full Run 1, and the validation
+  reviewer's independent d2 re-run (invariant 3).
+
+## [0.4.1-deploygate.2] — 2026-09-29
+
+### Changed
+- **Author model tier.** The code author, test author and implementer move out of the full
+  tier into a new **author** tier: session model under `quality`, `sonnet` under `balanced`
+  and `economy`. Every reviewer, validator and gate — plus the planner, clarifier and
+  feedback-loop — still inherits the session model in every profile (invariant 9 amended;
+  a structure test pins it).
+- **Diff-scoped Verify.** The orchestrator computes a `CHANGE_SCOPE` (everything since the
+  last release tag) once per Verify run. The coverage analyst, independent code reviewer
+  and validation reviewer trace only the in-scope FRs, user stories, NFRs and plans instead
+  of the whole project history. The suite run, production build, lint and every security
+  NFR are never scoped out; there is a full-scope fallback when there is no tag yet, the
+  change touches an ADR or the architecture overview, or it is re-verify cycle 3.
+
 ## [0.4.1-deploygate.1] — 2026-09-29
 
 Fork of 0.4.1 (jlroberts1/agentic-sdlc-plugin).
