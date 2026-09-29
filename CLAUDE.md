@@ -75,11 +75,14 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
    execution evidence** (exact command, exit code, the runner's own summary lines), and the
    Verify release gate independently re-runs the test suite once (condition d2) rather than
    trusting self-reported counts.
-4. **Git stays human-gated.** Agents **stage + suggest** commits/tags; they do not commit,
-   tag, push, or publish. (Develop + Release.) Enforced deterministically by the same hook:
-   `git commit`/`tag`/`push`, `gh release`, `npm publish` become an explicit permission
-   **ask** — deliberately ask, never deny, because the human approving the prompt IS the
-   gate. Hooks fire session-wide in the repo where the plugin is enabled.
+4. **Deploys stay human-gated.** Agents **commit** finished work and create **local** release
+   tags; they do not push to a deploy branch, push tags, force-push, or publish. (Develop +
+   Release.) Enforced deterministically by the same hook: a `git push` that updates a deploy
+   branch (`main`, `master`, or the comma-separated `SDLC_DEPLOY_BRANCHES`, which replaces
+   the default), a force/delete/tag/mirror/`--all` push, `gh release`, and `npm publish`
+   become an explicit permission **ask** — deliberately ask, never deny, because the human
+   approving the prompt IS the gate. Commits, local tags, and pushes to feature branches pass
+   through. Hooks fire session-wide in the repo where the plugin is enabled.
 5. **Don't yak-shave the target.** If a target repo's *pre-existing* toolchain is broken,
    that's a gate finding to route back — agents must NOT rewrite the target's dependency tree,
    add `resolutions`, monkey-patch `node_modules`, or add `postinstall` patches.

@@ -23,23 +23,26 @@ Read CLAUDE.md to learn:
   - Expected build artifacts
   - Module system (CJS, ESM, dual, etc.)
 
-CHECK 1 — VERSION CONSISTENCY (release is STAGED, not committed):
+CHECK 1 — VERSION CONSISTENCY (release is COMMITTED + TAGGED locally, not pushed):
 
-  The Release Author stages the change and SUGGESTS the commit + tag; it does NOT commit
-  or tag (git is human-gated). So verify the staged state, not an existing tag:
+  The Release Author commits the release and creates a local annotated tag; it does NOT
+  push or publish (deploys are human-gated). So verify the local commit and tag:
   - Read the manifest file (package.json or equivalent) and extract the version; confirm
     it equals the Release Plan's new version.
-  - Run: git diff --cached --name-only — confirm the changelog, manifest (and lock file /
-    build output if applicable) are staged, and nothing unexpected is staged.
-  - Confirm the Author's SUGGESTED commit message is "v<VERSION>" and the SUGGESTED tag is
-    "v<VERSION>" (matching the manifest). A real tag/commit existing is NOT required — and
-    if the Author committed or tagged on its own, that is a FAIL (discipline breach).
+  - Run: git show --stat --format='%s' HEAD — confirm the subject is "v<VERSION>" and the
+    commit contains the changelog, manifest (and lock file / build output if applicable),
+    and nothing unexpected. Run: git status --porcelain — nothing release-related left
+    uncommitted.
+  - Run: git tag --points-at HEAD — confirm "v<VERSION>" (matching the manifest) is there.
+  - Run: git status -sb — the branch must be AHEAD of its upstream (or have none). If the
+    release commit or tag was already pushed, or anything was published, that is a FAIL
+    (discipline breach).
 
 CHECK 2 — CHANGELOG ACCURACY:
 
   Read the changelog file and find the entry for the new version.
-  Run: git log $(git describe --tags --abbrev=0)..HEAD --oneline
-  (commits since the last release tag — the new release is not yet committed).
+  Run: git log $(git describe --tags --abbrev=0 HEAD^)..HEAD^ --oneline
+  (commits since the previous release tag, excluding the release commit itself).
   Compare the changelog entry against the actual commits. Verify:
   - Every significant change is mentioned
   - No fabricated changes are listed
@@ -111,9 +114,9 @@ CHECK 8 — ROLLBACK READINESS:
   The release plan must carry its undo (human-executed — agents never roll back,
   just as they never publish). Verify:
   - The Release Plan contains a rollback plan with trigger conditions AND a
-    stage-aware command sequence (staged / committed / pushed / published).
-  - Its commands are CONCRETE and CONSISTENT with the staged release: the
-    package name and version in the rollback commands match the staged manifest
+    stage-aware command sequence (committed / pushed / published).
+  - Its commands are CONCRETE and CONSISTENT with the release commit: the
+    package name and version in the rollback commands match the committed manifest
     (a rollback plan for the wrong version is worse than none).
   - The registry-stage guidance matches this project's registry, and prefers
     deprecate + patch release over unpublish/history rewrites.

@@ -83,7 +83,7 @@ Model routing never downgrades a gate.
 | **Design** | Architecture, component specs, ADRs, STRIDE-lite threat model | IEEE 1016, Microsoft SDL, Nygard ADRs |
 | **Develop** | Plan → implement + test (proportionate to change tier) → review | Microsoft SDL |
 | **Verify** | Coverage, independent review, real production build, regression | IEEE 1012, ISO/IEC 25010 |
-| **Release** | Changelog, version bump, staged commit + tag + rollback plan (human-gated) | ITIL 4 |
+| **Release** | Changelog, version bump, release commit + local tag + rollback plan (push/publish human-gated) | ITIL 4 |
 | **Operate** | Triage, dependency/telemetry monitoring, post-release health, feedback + accreted lessons into the next cycle | ITIL 4, ISO/IEC 27001, DORA |
 
 ## How it's built (the two-zone model)
@@ -98,9 +98,10 @@ the plugin stays generic, your repo accumulates the lifecycle record.
 - **7 machine-readable phase playbooks** (`phases/`) — groups, modes, gates, post-phase state.
 - **Deterministic, tested state** (`scripts/sdlc-state.mjs`) — the single source of metadata truth.
 - **Deterministic guardrails** (`hooks/hooks.json` → `scripts/sdlc-guard.mjs`) — a PreToolUse
-  hook turns publish commands (`git commit`/`tag`/`push`, `gh release`, `npm publish`) into an
-  explicit permission **ask** (the human approving the prompt *is* the gate) and **denies**
-  direct edits of `sdlc-metadata.yml`, pointing back at the state script. Hooks fire
+  hook turns deploy and publish commands (a `git push` to `main`/`master` or your
+  `SDLC_DEPLOY_BRANCHES`, force/tag/delete pushes, `gh release`, `npm publish`) into an
+  explicit permission **ask** (the human approving the prompt *is* the gate; commits, local
+  tags, and feature-branch pushes pass through) and **denies** direct edits of `sdlc-metadata.yml`, pointing back at the state script. Hooks fire
   session-wide wherever the plugin is enabled — the ask-not-deny design keeps that safe.
 - **Human checkpoints at exactly three altitudes** — Define completes only after your
   requirements sign-off; Design completes only after you decide the ADR trade-offs

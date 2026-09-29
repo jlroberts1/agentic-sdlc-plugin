@@ -91,7 +91,7 @@ STEP 5 — Identify migration notes:
 STEP 6 — Draft the ROLLBACK PLAN (human-executed — ITIL remediation planning):
 
   Every release plan carries its undo. The rollback plan is written for the HUMAN:
-  agents never commit, tag, push, publish — and they never roll back either. Write
+  agents commit and tag locally but never push or publish — and they never roll back either. Write
   CONCRETE commands (real package name, real versions from this plan), not
   placeholders, and cover each stage the release can reach:
 
@@ -100,13 +100,10 @@ STEP 6 — Draft the ROLLBACK PLAN (human-executed — ITIL remediation planning
      consumer builds broken by it, a DEGRADED post-release health verdict from
      Operate. Name the concrete signals for THIS project.
 
-  b) Staged only (nothing committed yet): `git restore --staged .` and discard
-     the changelog/manifest edits — the trivial abort.
+  b) Committed/tagged locally, not pushed (where the agents leave it):
+     `git reset --hard HEAD~1` and `git tag -d v<NEW>` — the trivial abort.
 
-  c) Committed/tagged locally, not pushed: `git reset --hard HEAD~1` and
-     `git tag -d v<NEW>`.
-
-  d) Pushed: `git revert <release commit>` (never rewrite published history).
+  c) Pushed: `git revert <release commit>` (never rewrite published history).
      Deleting a pushed tag (`git tag -d v<NEW> && git push origin
      :refs/tags/v<NEW>`) only if it is certain no consumer fetched it —
      otherwise prefer a follow-up patch release.

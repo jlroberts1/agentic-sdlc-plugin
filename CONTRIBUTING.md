@@ -31,8 +31,8 @@ The authoritative list (with rationale) is in [CLAUDE.md](CLAUDE.md); in brief:
    (`init` / `complete` / `config`) — never an LLM hand-edit of YAML.
 3. **Exercise the real artifact.** Gates run the actual production build and confirm tests truly
    executed (0 suites collected = FAIL).
-4. **Git stays human-gated.** Agents stage and suggest commits/tags; they never commit, tag,
-   push, or publish.
+4. **Deploys stay human-gated.** Agents commit and tag locally; they never push to a deploy
+   branch, push tags, force-push, or publish.
 5. **Don't yak-shave the target.** Pre-existing toolchain rot is a gate finding routed back, not
    something agents fix in the target repo.
 6. **Proportionate ceremony.** Feature-intake tiers changes trivial/standard/complex (with hard

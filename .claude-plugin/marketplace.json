@@ -1,10 +1,10 @@
 {
-  "name": "agentic-sdlc-marketplace",
+  "name": "agentic-sdlc-deploygate",
   "owner": {
-    "name": "orchestratedbyalex",
-    "url": "https://github.com/orchestratedbyalex"
+    "name": "jlroberts1",
+    "url": "https://github.com/jlroberts1"
   },
-  "description": "Marketplace hosting the Agentic SDLC plugin.",
+  "description": "Fork of the Agentic SDLC plugin that gates only deploy pushes, not commits.",
   "plugins": [
     {
       "name": "agentic-sdlc",

@@ -10,6 +10,21 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.1-deploygate.1] — 2026-09-29
+
+Fork of 0.4.1 (jlroberts1/agentic-sdlc-plugin).
+
+### Changed
+- **Invariant 4 narrowed from "git stays human-gated" to "deploys stay human-gated."** The
+  guard hook no longer asks on `git commit` or `git tag`. A `git push` asks only when it
+  updates a deploy branch (`main`/`master` by default; set `SDLC_DEPLOY_BRANCHES` to a
+  comma-separated list to replace them), including a refspec-less push while on one, or when
+  it force-pushes, deletes, or pushes tags / `--all` / `--mirror`. `gh release` and
+  `npm publish` still ask.
+- Develop now commits the finished change instead of staging it and suggesting a message.
+- Release now commits the release and creates the local tag. The reviewer checks the commit
+  and tag, and pushing or publishing is the discipline FAIL.
+
 ## [0.4.1] — 2026-08-15
 
 ### Changed

@@ -9,25 +9,70 @@ const GUARD = fileURLToPath(new URL('../scripts/sdlc-guard.mjs', import.meta.url
 const bash = command => ({ tool_name: 'Bash', tool_input: { command } })
 const edit = (tool_name, file_path) => ({ tool_name, tool_input: { file_path } })
 
-// --- Invariant 4: git stays human-gated → "ask" on publish/history commands ---
+// --- Invariant 4: deploys stay human-gated → "ask" on deploy pushes, silent otherwise ---
 
-test('guard asks on git commit / git tag <name> / git push', () => {
-  for (const cmd of ['git commit -m "feat: x"', 'git tag v1.0.0', 'git push origin main']) {
-    const d = decide(bash(cmd))
+// the current branch is injected so tests never shell out to git
+const on = branch => ({ currentBranch: () => branch })
+const pushDecision = (cmd, branch = 'feature/x', env = {}) =>
+  decide(bash(cmd), { ...on(branch), env })
+
+test('guard stays silent on commits, local tags, and feature-branch pushes', () => {
+  for (const cmd of [
+    'git commit -m "feat: x"', 'git commit --amend --no-edit', 'git tag v1.0.0',
+    'git push', 'git push origin', 'git push -u origin feature/x',
+    'git push origin HEAD', 'git push origin HEAD:feature/y', 'git push origin main:feature/y',
+    'git -C packages/core commit -m x',
+  ]) {
+    assert.equal(pushDecision(cmd), null, `${cmd}: expected no opinion`)
+  }
+})
+
+test('guard asks on pushes that update a deploy branch', () => {
+  for (const cmd of [
+    'git push origin main', 'git push origin master', 'git push origin HEAD:main',
+    'git push origin feature/x:refs/heads/main', 'git push -u origin main',
+    'npm test && git push origin main', 'echo $(git push origin main)', 'FOO=1 env BAR=2 git push origin main',
+  ]) {
+    const d = pushDecision(cmd)
     assert.equal(d?.decision, 'ask', `${cmd}: expected ask`)
     assert.ok(d.reason.length > 0, `${cmd}: empty reason`)
   }
 })
 
-test('guard asks when the publish command hides mid-chain, in a substitution, or behind git flags', () => {
-  for (const cmd of [
-    'npm test && git push',
-    'echo $(git push origin main)',
-    'git -C packages/core commit -m x',
-    'FOO=1 env BAR=2 git push',
-  ]) {
-    assert.equal(decide(bash(cmd))?.decision, 'ask', `${cmd}: expected ask`)
+test('guard asks on a refspec-less push while on a deploy branch', () => {
+  for (const cmd of ['git push', 'git push origin', 'git push origin HEAD']) {
+    assert.equal(pushDecision(cmd, 'main')?.decision, 'ask', `${cmd} on main: expected ask`)
   }
+})
+
+test('guard asks when the current branch cannot be resolved', () => {
+  assert.equal(pushDecision('git push', null)?.decision, 'ask')
+})
+
+test('guard asks on force, delete, tag, and mirror pushes even to feature branches', () => {
+  for (const cmd of [
+    'git push -f origin feature/x', 'git push --force-with-lease origin feature/x',
+    'git push --force-with-lease=feature/x origin feature/x', 'git push origin +feature/x',
+    'git push origin :feature/x', 'git push --delete origin feature/x',
+    'git push --tags', 'git push --follow-tags origin feature/x', 'git push origin refs/tags/v1.0.0',
+    'git push --mirror', 'git push --all origin',
+  ]) {
+    assert.equal(pushDecision(cmd)?.decision, 'ask', `${cmd}: expected ask`)
+  }
+})
+
+test('SDLC_DEPLOY_BRANCHES replaces the default deploy branches', () => {
+  const env = { SDLC_DEPLOY_BRANCHES: 'production, release' }
+  assert.equal(pushDecision('git push origin production', 'feature/x', env)?.decision, 'ask')
+  assert.equal(pushDecision('git push', 'release', env)?.decision, 'ask')
+  assert.equal(pushDecision('git push origin main', 'feature/x', env), null)
+})
+
+test('guard resolves the branch in the repo named by git -C', () => {
+  let seen
+  decide({ tool_name: 'Bash', cwd: '/work', tool_input: { command: 'git -C sub push' } },
+    { currentBranch: cwd => { seen = cwd; return 'feature/x' } })
+  assert.equal(seen, '/work/sub')
 })
 
 test('guard asks on gh release create and npm/pnpm/yarn publish', () => {
@@ -49,8 +94,8 @@ test('guard stays silent on read-only git/gh/npm usage', () => {
 })
 
 test('guard stays silent on --dry-run variants', () => {
-  for (const cmd of ['git push --dry-run', 'git commit --dry-run', 'npm publish --dry-run']) {
-    assert.equal(decide(bash(cmd)), null, `${cmd}: expected no opinion`)
+  for (const cmd of ['git push --dry-run origin main', 'git push -n origin main', 'npm publish --dry-run']) {
+    assert.equal(pushDecision(cmd), null, `${cmd}: expected no opinion`)
   }
 })
 
@@ -106,6 +151,7 @@ test('guard fails open on unknown tools and malformed input', () => {
 
 // --- CLI: the hook protocol (JSON on stdin → hookSpecificOutput on stdout, exit 0) ---
 
+// the CLI resolves the real current branch, so give it a push that is gated regardless
 function runGuard(stdin) {
   return spawnSync(process.execPath, [GUARD], {
     input: typeof stdin === 'string' ? stdin : JSON.stringify(stdin),
@@ -114,7 +160,7 @@ function runGuard(stdin) {
 }
 
 test('CLI: an ask decision is emitted as PreToolUse hookSpecificOutput JSON', () => {
-  const r = runGuard(bash('git push origin main'))
+  const r = runGuard(bash('git push --force origin main'))
   assert.equal(r.status, 0)
   const out = JSON.parse(r.stdout)
   assert.equal(out.hookSpecificOutput.hookEventName, 'PreToolUse')
