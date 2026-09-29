@@ -35,7 +35,7 @@ accumulates the evidence.
 ## Build / test / run
 
 ```bash
-node --test                      # run all tests (currently 169, must stay green; model-free)
+node --test                      # run all tests (currently 170, must stay green; model-free)
 node evals/run.mjs --list        # list the agent evals (free)
 SDLC_EVALS=1 node evals/run.mjs  # run the agent evals headless — BILLED (real model calls)
 claude --plugin-dir .            # load the plugin into a Claude Code session for live use
@@ -124,7 +124,8 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
   independent reviewer and validation reviewer; security NFRs never scoped out), the
   test-run budget (authors run targeted tests; the Develop reviewer's full run, the
   regression tester's full Run 1 and the validation reviewer's d2 re-run are never removed), the gate agents' machine-parsable
-  `VERDICT: PASS|FAIL` line, the sentinel templates, the persisted-loop-state wiring
+  `VERDICT: PASS|FAIL` line (and that the orchestrator, like the eval harness, accepts it
+  bold-wrapped), the sentinel templates, the persisted-loop-state wiring
   (`gate-log` / `loop-reset` / `runtime` in the orchestrator; `plan-active` /
   `clarifier-round` / `verifyCycle` in playbooks 4–5), the route-back recovery wiring
   (`reopen` + `--evidence` in the orchestrator; `reopen --phase develop` /

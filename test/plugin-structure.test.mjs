@@ -287,6 +287,17 @@ test('suite runs are budgeted without dropping a gate run (invariant 3)', () => 
     'phase 4 never passes APPROVED_AT to the new-requirements review')
 })
 
+// The orchestrator's gate-parsing rule must accept the same lines the eval harness does
+// (evals/lib.mjs VERDICT_RE: line-anchored, optional ** bold, last occurrence wins) — a
+// bolded verdict must never cost a re-dispatch or turn into a second-miss FAIL.
+test('the orchestrator accepts a bold-wrapped VERDICT line, like the eval harness', () => {
+  const sdlc = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
+  assert.match(sdlc, /optionally wrapped in markdown bold/, 'sdlc.md does not say a bolded VERDICT line is parseable')
+  assert.match(sdlc, /last\s+one wins/, 'sdlc.md does not say which VERDICT line wins')
+  const lib = readFileSync(join(ROOT, 'evals', 'lib.mjs'), 'utf8')
+  assert.match(lib, /\(\?:\\\*\\\*\)\?VERDICT/, 'eval harness VERDICT_RE no longer accepts optional bold')
+})
+
 test('the model profile is surfaced at start and offered once at first setup', () => {
   const sdlc = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
   // Discoverability: the Step 1 status board renders the active profile (from Step 0's detect),

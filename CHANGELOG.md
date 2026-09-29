@@ -10,6 +10,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.1-deploygate.4] — 2026-09-29
+
+### Fixed
+- **Bold-wrapped gate verdicts are parseable.** The orchestrator's gate-parsing rule now
+  says a line starting with `VERDICT: PASS|FAIL`, optionally wrapped in markdown bold,
+  counts (last one wins) — matching the eval harness. Previously a strict reading could
+  re-dispatch a gate that bolded its verdict (seen from Haiku on the regression tester)
+  and turn a second bolded reply into a FAIL.
+
 ## [0.4.1-deploygate.3] — 2026-09-29
 
 ### Changed
