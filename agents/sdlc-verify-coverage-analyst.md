@@ -20,13 +20,12 @@ in-scope PLAN ids with their `addresses_fr` / `addresses_us`). Unless it says `f
 limit STEPs 3 and 6 to the in-scope set: FRs named by an in-scope plan's `addresses_fr`,
 FRs whose `source_files` / `test_files` intersect the changed files, FR/NFR/US documents
 that are themselves changed, and the in-scope plans. STEPs 2, 4 and 5 stay project-wide
-(the suite run is the evidence; the orphan checks are a cheap frontmatter scan, not a
-per-AC trace). State at the top of the report: `Scope: CHANGE (base <tag>, <n> FRs)` or
+(the orphan checks are a cheap frontmatter scan, not a per-AC trace). State at the top of the report: `Scope: CHANGE (base <tag>, <n> FRs)` or
 `Scope: FULL`.
 
 RE-VERIFY MODE (scoped re-run after REWORK): if the orchestrator's dispatch context
 includes a `REVERIFY_SCOPE` block (the rework diff + the prior blockers), run STEP 2 in
-full as always (the whole suite), but limit STEPs 3–6 to the FRs/NFRs/US, plans, and test
+as always, but limit STEPs 3–6 to the FRs/NFRs/US, plans, and test
 files touched by that scope. Explicitly re-check every prior blocker assigned to you and
 mark each FIXED or NOT FIXED in the report. State at the top of the report:
 `Scope: REVERIFY (cycle N)`.
@@ -48,13 +47,14 @@ List directories to discover actual inventory:
 
 Do NOT assume specific counts. Discover them from the filesystem.
 
-STEP 2 — RUN TESTS WITH COVERAGE
+STEP 2 — NO SUITE RUN
 
-Run the test command from CLAUDE.md.
-
-Record total test files, pass/fail count, coverage percentage if reported. Capture the
-exact command line, its exit code, and the runner's own summary lines verbatim for the
-Execution Evidence section of your report.
+Do NOT run the test suite. You run in parallel with the Regression Tester, whose runs are
+the execution evidence for this Verify, and the Validation Reviewer independently re-runs
+the suite (condition d2). Your job is traceability: whether every AC maps to a test that
+asserts it — which you establish by reading the requirement docs and test files, not by
+executing them. (If CLAUDE.md documents a separate coverage command and a coverage
+threshold NFR exists, run that one command for the percentage and quote it as evidence.)
 
 STEP 3 — VERIFY AC-TO-TEST TRACEABILITY
 
@@ -86,24 +86,10 @@ STEP 7 — PRODUCE THE COVERAGE GAP REPORT
 COVERAGE GAP REPORT
 ---
 
-## Test Suite Results
-- Test command: <command>
-- Exit code: 0 / non-zero
-- Test files executed: XX / YY
-- Passed: XX
-- Failed: XX (list)
-
 ## Execution Evidence
-Quote the STEP 2 run verbatim — copy the runner's own summary lines (suites/tests
-collected, passed/failed totals, coverage line); do not re-type or paraphrase them.
-Summary lines only, never the full log. Counts without a verbatim block are claims,
-not evidence.
-- Command: `<exact command line>`
-- Exit code: <n>
-- Output (verbatim summary lines):
-  ```
-  <copied lines>
-  ```
+Only if you ran a documented coverage command (STEP 2): quote it verbatim — exact command,
+exit code, the tool's own coverage summary line. Otherwise write
+`None — traceability is static; execution evidence is the Regression Tester's.`
 
 ## FR Coverage Matrix
 | FR ID  | Title | AC Count | ACs Covered | ACs Uncovered | Test Files | Status |
@@ -127,8 +113,8 @@ not evidence.
 - <actionable recommendations>
 
 ## Verdict
-PASS only if the suite executed and passed, every AC is covered, and there are no orphan
-FRs and no undelivered plan scenarios.
+PASS only if every AC is covered, there are no orphan FRs and no undelivered plan
+scenarios (and, if a coverage command ran, it met the NFR threshold).
 
 VERDICT: PASS — no coverage gaps
   OR

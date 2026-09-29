@@ -96,11 +96,16 @@ STEP 4 — BUILD + REGRESSION VERIFICATION
 Run the build command from CLAUDE.md. It must complete with exit code 0; if it
 fails, read the error output and fix the compilation issue.
 
-Then run the FULL test command from CLAUDE.md. Every previously-passing test MUST
-still pass — if your change broke one, you introduced a regression: fix your code
-(do NOT edit the test to make it pass). New tests authored in parallel by the Test
-Author may not yet be in your view; you are confirming that EXISTING behavior still
-works.
+Then run the AFFECTED tests — the existing test files that exercise the source files you
+changed (grep the test directory for imports of each changed module; pass those files to
+the test command the way CLAUDE.md shows, e.g. `npm test -- <files>`, `node --test
+<files>`, `pytest <files>`). Every one MUST still pass — if your change broke one, you
+introduced a regression: fix your code (do NOT edit the test to make it pass). Do NOT run
+the full suite: the Code Reviewer runs it next as the regression gate, and the Test Author
+may be running tests in the same tree right now. If the runner cannot target files, or you
+cannot tell which tests cover the change, run the full suite once instead. New tests
+authored in parallel by the Test Author may not yet be in your view; you are confirming
+that EXISTING behavior still works.
 
 Then run the lint command from CLAUDE.md and resolve issues in code you touched.
 
@@ -113,7 +118,7 @@ STEP 5 — REPORT
 
 ### Build, Tests & Lint
 - Build: <command from CLAUDE.md> — PASS/FAIL
-- Existing test suite: <command> — PASS/FAIL (still green? regressions fixed: <list>)
+- Affected tests: <exact command, files> — PASS/FAIL (regressions fixed: <list>)
 - Lint: <command> — clean / issues fixed
 - Errors fixed: <list any compilation errors encountered and resolved>
 

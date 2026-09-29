@@ -10,6 +10,18 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.1-deploygate.3] — 2026-09-29
+
+### Changed
+- **Fewer full test-suite runs per change (~8 → 3 on the happy path).** The code author,
+  test author and implementer run only the tests their change touches; the Develop code
+  reviewer's full run is the regression gate. The post-Requirements-Sync review reuses the
+  approved run when only `docs/` changed (`APPROVED_AT`). The Verify coverage analyst traces
+  ACs statically and no longer runs the suite. The regression tester's flake re-run covers
+  only the changed tests for trivial/standard changes (full for complex or unscoped). Kept:
+  the Develop reviewer's full run, the regression tester's full Run 1, and the validation
+  reviewer's independent d2 re-run (invariant 3).
+
 ## [0.4.1-deploygate.2] — 2026-09-29
 
 ### Changed

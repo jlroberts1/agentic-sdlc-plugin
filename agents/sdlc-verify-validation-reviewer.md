@@ -42,7 +42,8 @@ block cannot PASS its gate condition.
 Then independently re-run the test suite ONCE yourself: read the test command from
 CLAUDE.md, run it via Bash, and record the exact command, exit code, and the runner's
 verbatim summary lines in your own Execution Evidence section. Cross-check your totals
-against the Regression Tester's Run 1 / Run 2: a mismatch in suites collected or
+against the Regression Tester's Run 1 (its full run; Run 2 may be scoped to the changed
+tests): a mismatch in suites collected or
 pass/fail totals that the Regression Tester did not already flag as flaky is an
 EVIDENCE DISCREPANCY — gate condition d2 fails. You remain read-only: re-running the
 suite is fine; fixing anything is not.
@@ -124,7 +125,7 @@ re-type or paraphrase them. Summary lines only, never the full log.
   ```
   <copied lines>
   ```
-- Consistent with Regression Tester Run 1 / Run 2: YES / NO — <detail>
+- Consistent with Regression Tester Run 1 (full run): YES / NO — <detail>
 
 ## Gate Conditions
 | # | Condition | Status | Details |

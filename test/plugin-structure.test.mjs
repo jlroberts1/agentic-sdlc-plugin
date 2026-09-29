@@ -267,6 +267,26 @@ test('Verify passes a CHANGE_SCOPE that the tracing agents honour', () => {
   assert.match(validation, /every security NFR/, 'validation-reviewer may scope out security NFRs')
 })
 
+// Test-run budget: authors run targeted tests, the Develop reviewer's full run is the
+// regression gate, the coverage analyst never runs the suite, and the regression tester's
+// flake re-run is scoped unless complex. The d2 independent re-run is never removed.
+test('suite runs are budgeted without dropping a gate run (invariant 3)', () => {
+  const read = a => readFileSync(join(ROOT, 'agents', `sdlc-${a}.md`), 'utf8')
+  for (const a of ['develop-code-author', 'develop-test-author', 'develop-implementer'])
+    assert.match(read(a), /Do not\s+run\s+the\s+full\s+suite/i, `${a} still runs the full suite`)
+  const reviewer = read('develop-code-reviewer')
+  assert.match(reviewer, /FULL TEST SUITE RUN/, 'develop code reviewer lost its full run')
+  assert.match(reviewer, /APPROVED_AT/, 'develop code reviewer has no docs-only reuse rule')
+  assert.match(read('verify-coverage-analyst'), /Do NOT run the test suite/, 'coverage analyst still runs the suite')
+  const reg = read('verify-regression-tester')
+  assert.match(reg, /STEP 1 — FIRST FULL RUN/, 'regression tester lost its full run')
+  assert.match(reg, /tier: complex/, 'regression tester never runs a full flake pass for complex changes')
+  assert.match(read('verify-validation-reviewer'), /independently re-run the test suite ONCE/,
+    'validation reviewer lost the d2 independent re-run')
+  assert.match(readFileSync(join(ROOT, 'phases', 'phase-4-develop.md'), 'utf8'), /APPROVED_AT/,
+    'phase 4 never passes APPROVED_AT to the new-requirements review')
+})
+
 test('the model profile is surfaced at start and offered once at first setup', () => {
   const sdlc = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
   // Discoverability: the Step 1 status board renders the active profile (from Step 0's detect),

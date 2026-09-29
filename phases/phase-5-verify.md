@@ -35,7 +35,9 @@ Prerequisite: the Develop phase has completed the change(s) under verification.
    the code). The static-dynamic-analyzer MUST run the project's **production build** (the
    deployable artifact, not the unit-test toolchain — they can differ) and the
    regression-tester must confirm the suite actually **executed** (0 suites collected =
-   FAIL, not a pass). A failing build, or a runner that errored out, is a gate BLOCKER even
+   FAIL, not a pass). The Regression Tester's full Run 1 is this group's one full suite
+   run: the coverage analyst traces ACs statically and does not run the suite, and the
+   flake re-run covers only the changed tests unless the change is 🔴 complex. A failing build, or a runner that errored out, is a gate BLOCKER even
    when types + unit assertions are green. Every command-running verifier must quote
    **verbatim execution evidence** in its report — the exact command, exit code, and the
    runner's own summary lines; counts without a verbatim block are claims, not evidence.
