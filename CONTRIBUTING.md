@@ -43,7 +43,9 @@ The authoritative list (with rationale) is in [CLAUDE.md](CLAUDE.md); in brief:
    (regenerate the `.svg`), and the GitHub Pages site (`index.html` + `flow.html`).
 8. **Subagents return only their final message.** Keep orchestrator output terse.
 9. **Model profiles never downgrade the gates.** Routing may run mechanical/analysis agents on
-   smaller models, but full-tier agents always inherit the session model.
+   smaller models, but full-tier agents (every reviewer/validator, planner, clarifier,
+   feedback-loop) always inherit the session model. The code/test authors are the separate
+   author tier (`sonnet` in balanced/economy), always gated by a full-tier reviewer.
 
 ## Editing agents
 

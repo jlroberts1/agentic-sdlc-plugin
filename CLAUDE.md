@@ -35,7 +35,7 @@ accumulates the evidence.
 ## Build / test / run
 
 ```bash
-node --test                      # run all tests (currently 161, must stay green; model-free)
+node --test                      # run all tests (currently 168, must stay green; model-free)
 node evals/run.mjs --list        # list the agent evals (free)
 SDLC_EVALS=1 node evals/run.mjs  # run the agent evals headless — BILLED (real model calls)
 claude --plugin-dir .            # load the plugin into a Claude Code session for live use
@@ -97,8 +97,11 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
    message IS the return value to the orchestrator. Keep orchestrator output terse.
 9. **Model profiles never downgrade the gates.** Model routing (`quality`/`balanced`/`economy`,
    see `references/model-routing.md`) may run mechanical/analysis agents on smaller models, but full-tier
-   agents (every reviewer/validator, the planner, the clarifier, the code/test/implementer
-   authors, the feedback-loop) always inherit the session model — in every profile.
+   agents (every reviewer/validator, the planner, the clarifier, the feedback-loop) always
+   inherit the session model — in every profile. The code/test/implementer authors are the
+   separate **author** tier (`sonnet` in balanced/economy): code-writing may move because a
+   full-tier reviewer gates every line it writes (invariant 1). Never move a reviewer,
+   validator, planner or clarifier out of the full tier.
 10. **The lifecycle pauses for humans at exactly three altitudes.** `HUMAN_CHECKPOINT`
     (distinct from the `HUMAN_REVIEW_REQUIRED` failure escalation) is a planned sign-off on
     gate-PASSed work: the Define requirements sign-off, the Design sign-off — where ADR
@@ -115,7 +118,10 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
   the working prompt.
 - After any change, run `node --test` — `test/plugin-structure.test.mjs` asserts all 7
   playbooks exist, the **35-agent** roster count, reviewer read-only tool grants, the
-  model-routing table's exact roster coverage, the gate agents' machine-parsable
+  model-routing table's exact roster coverage (and that no reviewer, validator, planner,
+  clarifier or feedback-loop ever leaves the full tier — only the three authors form the
+  author tier), the Verify `CHANGE_SCOPE` wiring (playbook 5 + the coverage analyst,
+  independent reviewer and validation reviewer; security NFRs never scoped out), the gate agents' machine-parsable
   `VERDICT: PASS|FAIL` line, the sentinel templates, the persisted-loop-state wiring
   (`gate-log` / `loop-reset` / `runtime` in the orchestrator; `plan-active` /
   `clarifier-round` / `verifyCycle` in playbooks 4–5), the route-back recovery wiring

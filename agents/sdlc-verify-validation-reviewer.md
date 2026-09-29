@@ -21,6 +21,16 @@ INPUTS:
 - Static & Dynamic Analysis Report (Agent 3)
 - Regression Test Report (Agent 4)
 
+CHANGE SCOPE: the orchestrator passes a `CHANGE_SCOPE` block (base tag, changed files,
+in-scope PLAN ids with their `addresses_fr` / `addresses_us`). Unless it says `full`,
+STEPs 1–2 and gate conditions e, f, g, h cover the in-scope set only: user stories named
+by an in-scope plan's `addresses_us` or implementing an in-scope FR, NFRs cited by an
+in-scope plan or FR, **every security NFR** (security is checked at every tier, never
+scoped out), ADRs constraining the changed files, and the in-scope plans. Everything
+outside was validated by the Verify that released it. STEP 0's independent re-run is
+never scoped — it runs the whole suite. State in the Executive Summary:
+`Scope: CHANGE (base <tag>)` or `Scope: FULL`.
+
 STEP 0 — DISCOVER COUNTS + INDEPENDENT RE-RUN
 
 Use counts from the Verification reports for inventory (FRs, NFRs, user stories). Do

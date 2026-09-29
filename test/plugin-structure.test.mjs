@@ -217,7 +217,7 @@ test('sentinel line templates are pinned at their sources', () => {
 test('the model-routing table assigns all 35 agents to exactly one tier', () => {
   const text = readFileSync(join(ROOT, 'references', 'model-routing.md'), 'utf8')
   const assigned = []
-  for (const tier of ['full', 'standard', 'fast']) {
+  for (const tier of ['full', 'author', 'standard', 'fast']) {
     const row = text.split('\n').find(l => l.startsWith(`| **${tier}**`))
     assert.ok(row, `no ${tier} tier row in the model-routing table`)
     const agentsCell = row.split('|')[2] ?? ''
@@ -231,6 +231,40 @@ test('the model-routing table assigns all 35 agents to exactly one tier', () => 
     .filter(f => f.endsWith('.md')).map(f => f.replace(/\.md$/, ''))
   assert.deepEqual(assigned.sort(), roster.sort(),
     'routing table does not cover the agent roster exactly')
+})
+
+// Invariant 9: only code/test writing may leave the session model. Every reviewer/validator
+// plus the planner, clarifier and feedback-loop must sit in the full (always-inherit) tier,
+// and the author tier must stay inherit under the quality profile.
+test('model routing never moves a gate out of the full tier (invariant 9)', () => {
+  const text = readFileSync(join(ROOT, 'references', 'model-routing.md'), 'utf8')
+  const row = tier => text.split('\n').find(l => l.startsWith(`| **${tier}**`)) ?? ''
+  const names = r => [...(r.split('|')[2] ?? '').matchAll(/`([a-z0-9-]+)`/g)].map(m => m[1])
+  const full = names(row('full'))
+  const gates = readdirSync(join(ROOT, 'agents'))
+    .map(f => f.replace(/^sdlc-/, '').replace(/\.md$/, ''))
+    .filter(n => /reviewer|architect-planner|architect-clarifier|feedback-loop/.test(n))
+  for (const g of gates) assert.ok(full.includes(g), `${g} is not in the full tier`)
+  assert.deepEqual(names(row('author')).sort(),
+    ['develop-code-author', 'develop-implementer', 'develop-test-author'],
+    'the author tier may hold only the code/test-writing agents')
+  const [quality] = row('author').split('|').slice(3).map(c => c.trim())
+  assert.equal(quality, 'inherit', 'the quality profile must keep authors on the session model')
+})
+
+// Verify is diff-scoped: the orchestrator computes one CHANGE_SCOPE per run and the
+// requirement-tracing agents honour it, while the suite run and security NFRs never scope out.
+test('Verify passes a CHANGE_SCOPE that the tracing agents honour', () => {
+  const verify = readFileSync(join(ROOT, 'phases', 'phase-5-verify.md'), 'utf8')
+  assert.match(verify, /CHANGE_SCOPE/, 'phase 5 never establishes a CHANGE_SCOPE')
+  assert.match(verify, /git describe --tags --abbrev=0/, 'phase 5 CHANGE_SCOPE has no base')
+  assert.match(verify, /CHANGE_SCOPE: full/, 'phase 5 has no full-scope fallback')
+  for (const a of ['coverage-analyst', 'independent-code-reviewer', 'validation-reviewer']) {
+    const text = readFileSync(join(ROOT, 'agents', `sdlc-verify-${a}.md`), 'utf8')
+    assert.match(text, /CHANGE_SCOPE/, `${a} ignores the CHANGE_SCOPE block`)
+  }
+  const validation = readFileSync(join(ROOT, 'agents', 'sdlc-verify-validation-reviewer.md'), 'utf8')
+  assert.match(validation, /every security NFR/, 'validation-reviewer may scope out security NFRs')
 })
 
 test('the model profile is surfaced at start and offered once at first setup', () => {

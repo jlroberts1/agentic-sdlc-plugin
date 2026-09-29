@@ -30,7 +30,11 @@ Read CLAUDE.md.
 
 STEP 1 — IDENTIFY RECENT CHANGES
 
-Determine what was changed in Phase 4. Sources:
+Determine what was changed in Phase 4. The orchestrator passes a `CHANGE_SCOPE` block
+(base tag, changed files, in-scope PLAN ids): run `git diff <base>..HEAD` over exactly
+those files and read the in-scope plans — that diff IS your review set (plus anything the
+changed code directly imports or is imported by, for blast radius). If the block says
+`full` or is absent, fall back to:
   - List docs/design/implementation-plans/ — read the most recent plan(s)
   - Read git log if available (`git log --oneline -20`)
   - Read sdlc-metadata.yml's `develop.plans` list
